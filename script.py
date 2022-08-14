@@ -122,8 +122,10 @@ def find_contents(URL):
                     with open(imgname,'wb+') as img:
                         img.write(img_data)
                     img.close()
-                    imge = PIL.Image.open(imgname)
-                    imge.save(imgname)
+                    im = PIL.Image.open(imgname)
+                    if im.mode in ("RGBA", "P"): 
+                        im = im.convert("RGB")
+                    im.save(imgname)
                 
                 # Delete the image file if can't get the file
                 except PIL.UnidentifiedImageError:
@@ -195,7 +197,7 @@ while (inp not in ["1","2","3"]):
         print("Invalid. Please enter your choice: ")
         continue
     elif inp=="1":
-        print("Please enter your URL:")
+        print("Please enter LN's URL:")
         print(">",end=" ")
         URL = input()
         while not validators.url(URL):
