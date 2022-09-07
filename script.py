@@ -7,74 +7,90 @@ from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.shared import Pt
 from docx.shared import RGBColor
 import PIL
-from PIL import Image
 import validators
 
+#----------------------------------------------------------
 
 def strip_url(URL):
-    global lnname, mainsoup
-    # Get main URL and main ln name
-    mainURL = re.sub('\/c.*$','',URL) #get the main url of ln
-    mainpage = requests.get(mainURL)
-    mainsoup = BeautifulSoup(mainpage.content,'html.parser')
-    lnname = mainsoup.find("span",attrs='series-name').text.strip()
+    global ln_name, main_rawparsed
 
-def find_volume():
-    global volURL, baseURL
-    
+    # Get main URL and main ln name
+    main_URL = re.sub('\/c.*$','',URL)
+    main_rawconts = requests.get(main_URL)
+    main_rawparsed = BeautifulSoup(main_rawconts.content,'html.parser')
+    ln_name = main_rawparsed.find("span",attrs='series-name').text.strip()
+
+def find_select_volume():
+    global vol_URL, baseURL
+
     baseURL = 'https://ln.hako.vn'
-    volURL_wobase = mainsoup.find_all("a",href=True)
     volnum = 1
-    volURLdict = {}
-    volnamedict = {}
+
+    # Find all link in page
+    vol_links = main_rawparsed.find_all("a",href=True)
+    
+    # Set dictionaries for saving URL and name
+    vol_URLdict = {}
+    vol_namedict = {}
     print("Get the volume:")
-    for x in volURL_wobase:
+
+    # Find volumes
+    for x in vol_links:
+
+        # Find the volumes' link
         if (re.search('/t[0-9]',x['href']))!= None:
-            volURL = baseURL + x['href']
-            volweb = requests.get(volURL)
-            volsoup = BeautifulSoup(volweb.content,'html.parser')
-            volname = volsoup.find("span",attrs='volume-name').text.strip()
-            print(f'{volnum}. {volname}')
-            volURLdict[volnum] = volURL
-            volnamedict[volnum] = volname
+            # Set vol's link
+            vol_URL = baseURL + x['href'] 
+            vol_rawconts = requests.get(vol_URL)
+            vol_rawparsed = BeautifulSoup(vol_rawconts.content,'html.parser')
+
+            # Find vol's name
+            vol_name = vol_rawparsed.find("span",attrs='volume-name').text.strip()
+            print(f'{volnum}. {vol_name}')
+
+            # Save to dicts for future uses
+            vol_URLdict[volnum] = vol_URL
+            vol_namedict[volnum] = vol_name
             volnum +=1
-    volinp = ""
-    while volinp not in range(volnum):
+
+    # Select volume to get
+    vol_selection = ""
+    while vol_selection not in range(volnum):
         try:
             print("Choose volume:\n>", end=" ")
-            volinp = int(input())
+            vol_selection = int(input())
         except ValueError:
             print("Invalid volume. Please enter again:")
             pass
-
-    print(f"Chosen the volume: {volnamedict[volinp]}")
-    volURL = volURLdict[volinp]
-    print(f"URL: {volURL}")
+    print(f"Chosen the volume: {vol_namedict[vol_selection]}")
+    vol_URL = vol_URLdict[vol_selection]
+    print(f"URL: {vol_URL}")
 
 #----------------------------------------------------------
 
-def get_URL_chap():
-    global chapURL
-    chapweb = requests.get(volURL)
-    chapsoup = BeautifulSoup(chapweb.content,'html.parser')
-    chapURL_raw = chapsoup.find_all("a",href=True)
-    chapURL = []
-    for x in chapURL_raw:
+def find_URL_chap():
+    global chap_URL
+
+    chap_rawconts = requests.get(vol_URL)
+    chap_rawparsed = BeautifulSoup(chap_rawconts.content,'html.parser')
+    chap_URL_raw = chap_rawparsed.find_all("a",href=True)
+    chap_URL = []
+    for x in chap_URL_raw:
         if (re.search('/c[0-9]',x['href']))!= None:
-            chapURL.append(baseURL+x['href'])
+            chap_URL.append(baseURL+x['href'])
     
 #----------------------------------------------------------
 
-def find_contents(URL):
-    
-    page = requests.get(URL)
-    soup = BeautifulSoup(page.content, "html.parser")
+def get_contents(URL):
+    print("Loading...")
+    rawconts = requests.get(URL)
+    rawparsed = BeautifulSoup(rawconts.content, "html.parser")
     
     # Pull the content from web
-    lncontents = soup.find_all("p",id=True)
-    volname = soup.find("h2",attrs="title-item").contents[0].text
-    title = soup.find("h4",attrs="title-item").contents[0].text
-    notes = soup.find_all(attrs="note-content long-text")
+    vol_name = rawparsed.find("h2",attrs="title-item").contents[0].text
+    chap_name = rawparsed.find("h4",attrs="title-item").contents[0].text
+    ln_conts = rawparsed.find_all("p",id=True)
+    notes = rawparsed.find_all(attrs="note-content long-text")
     
 
     # Create an instance of Document
@@ -89,7 +105,7 @@ def find_contents(URL):
     styles['Normal'].font.size = Pt(12)
 
     # Add heading
-    head = document.add_heading(title,1)
+    head = document.add_heading(chap_name,1)
     head.alignment = WD_ALIGN_PARAGRAPH.CENTER
 
     # Default value 
@@ -98,15 +114,15 @@ def find_contents(URL):
     
     # Make the default folder
     d = os.path.dirname(__file__) # directory of script
-    if "..." in title:
-        pathname = f'{d}/{lnname}/{volname}/{title.replace("...","")}'   
+    if "..." in chap_name:
+        pathname = f'{d}/{ln_name}/{vol_name}/{chap_name.replace("...","")}'   # avoid making commands 
     else:
-        pathname = f'{d}/{lnname}/{volname}/{title}'
+        pathname = f'{d}/{ln_name}/{vol_name}/{chap_name}'
     imgfolder = f'{pathname}/image'
     os.makedirs(os.path.dirname(imgfolder),exist_ok=True)
 
     # Add contents
-    for cnt in lncontents:
+    for cnt in ln_conts:
         for cont in cnt.contents:
             # Make the image file
             imgname = f'{imgfolder}/img{img_num}.jpg'
@@ -114,8 +130,8 @@ def find_contents(URL):
             
             # Find the image
             if cont.name == 'img':
-                img_url = cont['src']
-                img_data = requests.get(img_url).content 
+                img_url = cont['src']   
+                img_data = requests.get(img_url, headers={'referer': "https://ln.hako.vn"}).content
                 
                 # Get the image
                 try:
@@ -181,7 +197,7 @@ def find_contents(URL):
         os.rmdir(imgfolder)
     
     # Save the document        
-    document.save(f"{pathname}/{title}.docx")
+    document.save(f"{pathname}/{chap_name}.docx")
 
 #---------------------------------------------------------------------------------------
 # User interface
@@ -205,10 +221,10 @@ while (inp not in ["1","2","3"]):
             URL = input()
         else:
             strip_url(URL)
-            find_volume()
-            get_URL_chap()
-            for x in chapURL:
-                find_contents(x)
+            find_select_volume()
+            find_URL_chap()
+            for x in chap_URL:
+                get_contents(x)
             print("Done! Please enter your choice:")
             inp = ""
     elif inp=="2":
@@ -220,7 +236,7 @@ while (inp not in ["1","2","3"]):
             URL = input()
         else:
             strip_url(URL)
-            find_contents(URL)
+            get_contents(URL)
             print("Done! Please enter your choice:")
             inp = ""
     elif inp=="3":
