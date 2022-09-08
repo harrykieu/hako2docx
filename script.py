@@ -7,7 +7,9 @@ from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.shared import Pt
 from docx.shared import RGBColor
 import PIL
+from PIL import Image
 import validators
+from pathvalidate import sanitize_filepath
 
 #----------------------------------------------------------
 
@@ -114,10 +116,7 @@ def get_contents(URL):
     
     # Make the default folder
     d = os.path.dirname(__file__) # directory of script
-    if "..." in chap_name:
-        pathname = f'{d}/{ln_name}/{vol_name}/{chap_name.replace("...","")}'   # avoid making commands 
-    else:
-        pathname = f'{d}/{ln_name}/{vol_name}/{chap_name}'
+    pathname = f'{d}/{ln_name}/{vol_name}/{sanitize_filepath(chap_name)}'   
     imgfolder = f'{pathname}/image'
     os.makedirs(os.path.dirname(imgfolder),exist_ok=True)
 
@@ -197,7 +196,7 @@ def get_contents(URL):
         os.rmdir(imgfolder)
     
     # Save the document        
-    document.save(f"{pathname}/{chap_name}.docx")
+    document.save(f"{pathname}/{sanitize_filepath(chap_name)}.docx")
 
 #---------------------------------------------------------------------------------------
 # User interface
