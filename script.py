@@ -198,6 +198,43 @@ def get_contents(URL):
     # Save the document        
     document.save(f"{pathname}/{sanitize_filepath(chap_name)}.docx")
 
+def user_interface():
+    inp = ""
+    while (inp not in ["1","2","3"]):
+        print("1: Get a whole volume\n2: Get a chapter\n3: Exit\n>",end=" ")
+        inp = input()
+        if (inp not in ["1","2","3"]):
+            print("Invalid. Please enter your choice: ")
+            continue
+        elif inp=="1":
+            print("Please enter LN's URL:")
+            print(">",end=" ")
+            URL = input()
+            while not validators.url(URL):
+                print("Invalid URL. Please enter URL:")
+                URL = input()
+            else:
+                strip_url(URL)
+                find_select_volume()
+                find_URL_chap()
+                for x in chap_URL:
+                    get_contents(x)
+                print("Done! Please enter your choice:")
+                inp = ""
+        elif inp=="2":
+            print("Please enter your URL:")
+            print(">",end=" ")
+            URL = input()
+            while not validators.url(URL):
+                print("Invalid URL. Please enter URL:")
+                URL = input()
+            else:
+                strip_url(URL)
+                get_contents(URL)
+                print("Done! Please enter your choice:")
+                inp = ""
+        elif inp=="3":
+            break
 #---------------------------------------------------------------------------------------
 # User interface
 print(" _  _   _   _  _____    _         ___   ___   _____  __")
@@ -206,39 +243,4 @@ print("| __ |/ _ \| ' < (_) | |  _/ _ \ | |) | (_) | (__ >  < ")
 print("|_||_/_/ \_\_|\_\___/   \__\___/ |___/ \___/ \___/_/\_\ ")
 print()    
 print("Please enter your choice:")
-inp = ""
-while (inp not in ["1","2","3"]):
-    print("1: Get a whole volume\n2: Get a chapter\n3: Exit\n>",end=" ")
-    inp = input()
-    if (inp not in ["1","2","3"]):
-        print("Invalid. Please enter your choice: ")
-        continue
-    elif inp=="1":
-        print("Please enter LN's URL:")
-        print(">",end=" ")
-        URL = input()
-        while not validators.url(URL):
-            print("Invalid URL. Please enter URL:")
-            URL = input()
-        else:
-            strip_url(URL)
-            find_select_volume()
-            find_URL_chap()
-            for x in chap_URL:
-                get_contents(x)
-            print("Done! Please enter your choice:")
-            inp = ""
-    elif inp=="2":
-        print("Please enter your URL:")
-        print(">",end=" ")
-        URL = input()
-        while not validators.url(URL):
-            print("Invalid URL. Please enter URL:")
-            URL = input()
-        else:
-            strip_url(URL)
-            get_contents(URL)
-            print("Done! Please enter your choice:")
-            inp = ""
-    elif inp=="3":
-        break
+user_interface()
