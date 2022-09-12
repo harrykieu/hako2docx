@@ -198,6 +198,8 @@ def get_contents(URL):
     # Save the document        
     document.save(f"{pathname}/{sanitize_filepath(chap_name)}.docx")
 
+#----------------------------------------------------------
+
 def user_interface():
     inp = ""
     while (inp not in ["1","2","3"]):
@@ -235,8 +237,9 @@ def user_interface():
                 inp = ""
         elif inp=="3":
             break
+
 #---------------------------------------------------------------------------------------
-# User interface
+# Callout function
 print(" _  _   _   _  _____    _         ___   ___   _____  __")
 print("| || | /_\ | |/ / _ \  | |_ ___  |   \ / _ \ / __\ \/ /")
 print("| __ |/ _ \| ' < (_) | |  _/ _ \ | |) | (_) | (__ >  < ")
