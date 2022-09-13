@@ -10,6 +10,7 @@ import PIL
 from PIL import Image
 import validators
 from pathvalidate import sanitize_filepath
+from docx.oxml.ns import qn
 
 #----------------------------------------------------------
 
@@ -102,13 +103,18 @@ def get_contents(URL):
     styles = document.styles
     styles['Heading 1'].font.color.rgb = RGBColor(0, 0, 0)
     styles['Heading 1'].font.size = Pt(14)
+    styles['Heading 1'].font.name = "Cambria"
     styles['Normal'].font.name = "Cambria"
     styles['Normal'].font.color.rgb = RGBColor(0,0,0)
     styles['Normal'].font.size = Pt(12)
 
-    # Add heading
+    # Add heading + change font to Cambria
     head = document.add_heading(chap_name,1)
     head.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    title_style = head.style
+    rFonts = title_style.element.rPr.rFonts
+    rFonts.set(qn("w:asciiTheme"), "Cambria")
+    rFonts.set(qn("w:hAnsiTheme"), "Cambria")
 
     # Default value 
     img_num = 1  
